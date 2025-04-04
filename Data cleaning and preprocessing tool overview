@@ -1,0 +1,174 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyM3C6QJDKeSHs+x6adJKKsa",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Vaishnavi6kaladagi/data-science-projects/blob/main/Data%20cleaning%20and%20preprocessing%20tool%20overview\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "\n",
+        "class DataCleaningTool:\n",
+        "    def __init__(self, dataframe):\n",
+        "        self.dataframe = dataframe\n",
+        "\n",
+        "    def handle_missing_values(self, strategy='mean', columns=None):\n",
+        "        \"\"\"\n",
+        "        Handle missing values in the dataframe.\n",
+        "\n",
+        "        Parameters:\n",
+        "        - strategy: 'mean', 'median', or 'mode'\n",
+        "        - columns: list of columns to apply the strategy on\n",
+        "        \"\"\"\n",
+        "        if columns is None:\n",
+        "            columns = self.dataframe.columns\n",
+        "\n",
+        "        for column in columns:\n",
+        "            if strategy == 'mean':\n",
+        "                self.dataframe[column].fillna(self.dataframe[column].mean(), inplace=True)\n",
+        "            elif strategy == 'median':\n",
+        "                self.dataframe[column].fillna(self.dataframe[column].median(), inplace=True)\n",
+        "            elif strategy == 'mode':\n",
+        "                self.dataframe[column].fillna(self.dataframe[column].mode()[0], inplace=True)\n",
+        "            else:\n",
+        "                raise ValueError(\"Strategy must be 'mean', 'median', or 'mode'.\")\n",
+        "\n",
+        "    def remove_duplicates(self):\n",
+        "        \"\"\"Remove duplicate rows from the dataframe.\"\"\"\n",
+        "        self.dataframe.drop_duplicates(inplace=True)\n",
+        "\n",
+        "    def remove_outliers_zscore(self, threshold=3):\n",
+        "        \"\"\"\n",
+        "        Remove outliers using Z-score method.\n",
+        "\n",
+        "        Parameters:\n",
+        "        - threshold: Z-score threshold to identify outliers\n",
+        "        \"\"\"\n",
+        "        z_scores = np.abs((self.dataframe - self.dataframe.mean()) / self.dataframe.std())\n",
+        "        self.dataframe = self.dataframe[(z_scores < threshold).all(axis=1)]\n",
+        "\n",
+        "    def remove_outliers_iqr(self):\n",
+        "        \"\"\"Remove outliers using IQR method.\"\"\"\n",
+        "        Q1 = self.dataframe.quantile(0.25)\n",
+        "        Q3 = self.dataframe.quantile(0.75)\n",
+        "        IQR = Q3 - Q1\n",
+        "        self.dataframe = self.dataframe[~((self.dataframe < (Q1 - 1.5 * IQR)) | (self.dataframe > (Q3 + 1.5 * IQR))).any(axis=1)]\n",
+        "\n",
+        "    def get_cleaned_data(self):\n",
+        "        \"\"\"Return the cleaned dataframe.\"\"\"\n",
+        "        return self.dataframe\n",
+        "\n",
+        "# Example usage\n",
+        "if __name__ == \"__main__\":\n",
+        "    # Sample data creation\n",
+        "    data = {\n",
+        "        'A': [1, 2, np.nan, 4, 5, 5, 6, 7, 8, 9],\n",
+        "        'B': [np.nan, 1, 2, 3, 4, 4, 5, 6, 7, 8],\n",
+        "        'C': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]\n",
+        "    }\n",
+        "\n",
+        "    df = pd.DataFrame(data)\n",
+        "    print(\"Original DataFrame:\")\n",
+        "    print(df.to_string())\n",
+        "\n",
+        "    # Initialize the DataCleaningTool\n",
+        "    cleaning_tool = DataCleaningTool(df)\n",
+        "\n",
+        "    # Handle missing values\n",
+        "    cleaning_tool.handle_missing_values(strategy='mean', columns=['A', 'B'])\n",
+        "\n",
+        "    # Remove duplicates (if any)\n",
+        "    cleaning_tool.remove_duplicates()\n",
+        "\n",
+        "    # Remove outliers using Z-score\n",
+        "    cleaning_tool.remove_outliers_zscore(threshold=2)\n",
+        "\n",
+        "    # Alternatively, you can use IQR method\n",
+        "    # cleaning_tool.remove_outliers_iqr()\n",
+        "\n",
+        "    # Get the cleaned data\n",
+        "    cleaned_data = cleaning_tool.get_cleaned_data()\n",
+        "    print(\"\\nCleaned DataFrame:\")\n",
+        "    print(cleaned_data)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "t966KTwqeWp_",
+        "outputId": "82576eb8-946d-477b-c057-94283176f309"
+      },
+      "execution_count": 7,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Original DataFrame:\n",
+            "     A    B    C\n",
+            "0  1.0  NaN   10\n",
+            "1  2.0  1.0   20\n",
+            "2  NaN  2.0   30\n",
+            "3  4.0  3.0   40\n",
+            "4  5.0  4.0   50\n",
+            "5  5.0  4.0   60\n",
+            "6  6.0  5.0   70\n",
+            "7  7.0  6.0   80\n",
+            "8  8.0  7.0   90\n",
+            "9  9.0  8.0  100\n",
+            "\n",
+            "Cleaned DataFrame:\n",
+            "          A         B    C\n",
+            "0  1.000000  4.444444   10\n",
+            "1  2.000000  1.000000   20\n",
+            "2  5.222222  2.000000   30\n",
+            "3  4.000000  3.000000   40\n",
+            "4  5.000000  4.000000   50\n",
+            "5  5.000000  4.000000   60\n",
+            "6  6.000000  5.000000   70\n",
+            "7  7.000000  6.000000   80\n",
+            "8  8.000000  7.000000   90\n",
+            "9  9.000000  8.000000  100\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "<ipython-input-7-0725e4bbe522>:21: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.\n",
+            "The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.\n",
+            "\n",
+            "For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.\n",
+            "\n",
+            "\n",
+            "  self.dataframe[column].fillna(self.dataframe[column].mean(), inplace=True)\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
